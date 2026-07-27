@@ -32,6 +32,11 @@ class Settings(BaseSettings):
             return v.replace("postgresql://", "postgresql+asyncpg://", 1)
         return v
 
+    # When true, the API process also runs the ARQ indexing worker in-process
+    # (asyncio task) instead of relying on a separate worker service — needed
+    # on hosts whose free tier doesn't offer a background-worker service type.
+    run_worker_in_process: bool = False
+
     llm_provider: str = "gemini"
     llm_model: str = "gemini-2.0-flash"
     gemini_api_key: str = ""
