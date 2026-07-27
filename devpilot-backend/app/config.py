@@ -1,5 +1,6 @@
 from functools import lru_cache
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -20,6 +21,16 @@ class Settings(BaseSettings):
     database_url: str
     redis_url: str
     qdrant_url: str
+    qdrant_api_key: str = ""  # required for Qdrant Cloud, empty for local self-hosted
+
+    @field_validator("database_url")
+    @classmethod
+    def _use_asyncpg_driver(cls, v: str) -> str:
+        # Managed Postgres providers (Render, etc.) hand out a plain postgresql://
+        # URL; SQLAlchemy's async engine needs the asyncpg dialect explicitly.
+        if v.startswith("postgresql://"):
+            return v.replace("postgresql://", "postgresql+asyncpg://", 1)
+        return v
 
     llm_provider: str = "gemini"
     llm_model: str = "gemini-2.0-flash"

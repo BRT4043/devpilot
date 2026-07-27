@@ -12,7 +12,7 @@ COLLECTION = "devpilot_chunks"
 
 
 def get_client() -> AsyncQdrantClient:
-    return AsyncQdrantClient(url=settings.qdrant_url)
+    return AsyncQdrantClient(url=settings.qdrant_url, api_key=settings.qdrant_api_key or None)
 
 
 async def ensure_collection(client: AsyncQdrantClient, vector_size: int) -> None:
