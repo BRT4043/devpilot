@@ -17,7 +17,6 @@ services:
     dockerContext: ./devpilot-backend
     plan: free
     healthCheckPath: /health
-    preDeployCommand: alembic upgrade head
     envVars:
       - key: APP_ENV
         value: production
@@ -55,6 +54,7 @@ services:
           property: connectionString
       - key: REDIS_URL
         fromService:
+          type: keyvalue
           name: devpilot-redis
           property: connectionString
 
@@ -102,5 +102,6 @@ services:
           property: connectionString
       - key: REDIS_URL
         fromService:
+          type: keyvalue
           name: devpilot-redis
           property: connectionString
