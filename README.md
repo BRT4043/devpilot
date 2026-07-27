@@ -1,4 +1,4 @@
-# DevPilot AI
+# DevPilot 
 
 An AI workspace for chatting with a GitHub repository. Connect a repo, DevPilot
 indexes it (clone → chunk → embed → Qdrant), then every answer is grounded in
