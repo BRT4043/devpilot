@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -11,6 +13,7 @@ from app.services import auth_service
 
 settings = get_settings()
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 @router.get("/github/login")
@@ -30,6 +33,7 @@ async def github_callback(code: str, db: AsyncSession = Depends(get_db)) -> Redi
         user = await auth_service.upsert_user(db, gh_user, access_token)
         jwt_token = auth_service.create_jwt(user.id)
     except Exception:
+        logger.exception("Sign-in failed after GitHub exchange succeeded")
         raise HTTPException(500, "Could not complete sign-in — please try again")
     # Frontend route /auth/callback reads ?token= and stores it
     return RedirectResponse(f"{settings.frontend_url}/auth/callback?token={jwt_token}")
