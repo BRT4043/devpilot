@@ -26,8 +26,11 @@ async def github_callback(code: str, db: AsyncSession = Depends(get_db)) -> Redi
     except Exception:
         raise HTTPException(502, "GitHub OAuth exchange failed")
 
-    user = await auth_service.upsert_user(db, gh_user, access_token)
-    jwt_token = auth_service.create_jwt(user.id)
+    try:
+        user = await auth_service.upsert_user(db, gh_user, access_token)
+        jwt_token = auth_service.create_jwt(user.id)
+    except Exception:
+        raise HTTPException(500, "Could not complete sign-in — please try again")
     # Frontend route /auth/callback reads ?token= and stores it
     return RedirectResponse(f"{settings.frontend_url}/auth/callback?token={jwt_token}")
 

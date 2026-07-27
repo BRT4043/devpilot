@@ -10,8 +10,20 @@ from app.config import get_settings
 settings = get_settings()
 
 
+def _run_migrations() -> None:
+    """Runs synchronously; Alembic's own env.py calls asyncio.run() internally,
+    so this must execute off the event loop thread (see call site)."""
+    from alembic import command
+    from alembic.config import Config
+
+    command.upgrade(Config("alembic.ini"), "head")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    if settings.run_migrations_on_startup:
+        await asyncio.to_thread(_run_migrations)
+
     worker_task: asyncio.Task | None = None
     if settings.run_worker_in_process:
         from arq.worker import create_worker

@@ -37,6 +37,12 @@ class Settings(BaseSettings):
     # on hosts whose free tier doesn't offer a background-worker service type.
     run_worker_in_process: bool = False
 
+    # When true, run `alembic upgrade head` on startup instead of as a
+    # release/pre-deploy step — needed on hosts whose free tier doesn't offer
+    # a pre-deploy command. Safe here because it's a single instance, not a
+    # fleet where migrations could race.
+    run_migrations_on_startup: bool = False
+
     llm_provider: str = "gemini"
     llm_model: str = "gemini-2.0-flash"
     gemini_api_key: str = ""
