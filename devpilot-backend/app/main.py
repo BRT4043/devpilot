@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
@@ -8,6 +9,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import get_settings
 
 settings = get_settings()
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 
 def _run_migrations() -> None:
@@ -21,8 +24,18 @@ def _run_migrations() -> None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    logger.info(
+        "startup flags: run_migrations_on_startup=%r run_worker_in_process=%r",
+        settings.run_migrations_on_startup,
+        settings.run_worker_in_process,
+    )
     if settings.run_migrations_on_startup:
-        await asyncio.to_thread(_run_migrations)
+        logger.info("running alembic upgrade head...")
+        try:
+            await asyncio.to_thread(_run_migrations)
+            logger.info("alembic upgrade head: done")
+        except Exception:
+            logger.exception("alembic upgrade head FAILED")
 
     worker_task: asyncio.Task | None = None
     if settings.run_worker_in_process:
