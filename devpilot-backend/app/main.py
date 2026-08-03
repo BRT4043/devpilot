@@ -73,6 +73,30 @@ async def health() -> dict:
     return {"status": "ok", "env": settings.app_env}
 
 
+@app.get("/debug/env-check", tags=["meta"])
+async def env_check() -> dict:
+    """Temporary diagnostic: reports what this process actually parsed for
+    GEMINI_API_KEY without leaking the secret itself. Remove once the
+    production ascii-encoding indexing bug is resolved."""
+    import os
+
+    def analyze(raw: str) -> dict:
+        non_ascii = [(i, repr(c), hex(ord(c))) for i, c in enumerate(raw) if ord(c) > 127]
+        return {
+            "length": len(raw),
+            "first_8": raw[:8],
+            "last_4": raw[-4:] if len(raw) >= 4 else raw,
+            "is_ascii": raw.isascii(),
+            "non_ascii_chars": non_ascii[:10],
+            "non_ascii_count": len(non_ascii),
+        }
+
+    return {
+        "settings_gemini_api_key": analyze(settings.gemini_api_key),
+        "os_environ_gemini_api_key": analyze(os.environ.get("GEMINI_API_KEY", "")),
+    }
+
+
 from app.routers import auth, chat, commits, debug, explain, github, interview, repos  # noqa: E402
 
 app.include_router(auth.router, prefix="/auth", tags=["auth"])
